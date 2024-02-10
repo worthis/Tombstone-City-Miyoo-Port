@@ -1,38 +1,48 @@
-OBJS = Gfx.o Font.o Help.o Tombstone.o
+# run `TARGET=miyoo make` to build for MIYOO MINI
 
-PROG1 = TombstoneSDL.exe
-PROGRAMS = $(PROG1)
+TARGET_EXEC = tombstone
+TOMBSTONE_VERSION = 1.0
 
-# Use -DGIF_SUPPORT to enable Gif format
-LIBGIF_DIR = /usr/lib
-INCGIF_DIR = /usr/include
+MIYOO_CXX := arm-linux-gnueabihf-g++
+MIYOO_PREFIX := /opt/miyoomini-toolchain/arm-linux-gnueabihf/libc
+MIYOO_CXXFLAGS := -Wall -I$(MIYOO_PREFIX)/usr/include/SDL -D_GNU_SOURCE=1 -D_REENTRANT -DMIYOO_MINI
+MIYOO_LDFLAGS := -L$(MIYOO_PREFIX)/usr/lib -lSDL -lSDL_mixer
 
-# -DUSE_ALL_FONT  : to enable all fonts 
-# -DGIF_SUPPORT : to enable GIF library usage
+LINUX_CXX := g++
+LINUX_PREFIX := /
+LINUX_CXXFLAGS := -Wall -I$(LINUX_PREFIX)/usr/include/SDL -D_GNU_SOURCE=1 -D_REENTRANT -DLINUX_MODE
+LINUX_LDFLAGS := -L$(LINUX_PREFIX)/usr/lib -lSDL -lSDL_mixer
 
-# Linux build options
-#CXXFLAGS += -O2 -DLINUX -DGIF_SUPPORT -Wall `sdl-config --cflags` -Iicons -I$(INCGIF_DIR)
-#LDFLAGS =`sdl-config --libs` $(LIBGIF_DIR)/libungif.a 
+ifeq ($(TARGET),miyoo)
+	CXX=$(MIYOO_CXX)
+	CXXFLAGS=$(MIYOO_CXXFLAGS)
+	LDFLAGS=$(MIYOO_LDFLAGS)
+else
+	CXX=$(LINUX_CXX)
+	CXXFLAGS=$(LINUX_CXXFLAGS)
+	LDFLAGS=$(LINUX_LDFLAGS)
+endif
 
-CXXFLAGS += -g -O0 -Wall -DGIF_SUPPORT `sdl-config --cflags` -Iicons -I$(INCGIF_DIR)
-LDFLAGS =`sdl-config --libs`  -L$(LIBGIF_DIR) -lungif -lSDL_mixer
+BUILD_DIR := ./build/$(TARGET)
+SRC_DIRS := ./src
+BIN_DIR := ./bin
+ASSETS_DIR := ./assets
 
-CC = g++
-LD = g++
+SRCS := $(shell find $(SRC_DIRS) -name '*.cpp')
+OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
 
-all: $(PROGRAMS)
+bin/$(TARGET_EXEC): $(OBJS)
+	mkdir -p $(dir $@)
+	mkdir -p $(BIN_DIR)/assets/images
+	$(CXX) $(OBJS) -o bin/$(TARGET_EXEC) $(LDFLAGS)
+	cp -r $(ASSETS_DIR)/images/bmp/* $(BIN_DIR)/assets/images
+	cp -r $(ASSETS_DIR)/wav $(BIN_DIR)/assets/
 
+$(BUILD_DIR)/%.cpp.o: %.cpp
+	mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+.PHONY: clean
 clean:
-	rm -f $(OBJS) $(POBJS) $(PROGRAMS) *~ core
-
-$(PROG1): $(OBJS) 
-	$(LD) $(OBJS) $(LDFLAGS) -o $(PROG1) 
-
-.cc.o:
-	$(CC) $(CXXFLAGS) -c $<
-
-.cpp.o:
-	$(CC) $(CXXFLAGS) -c $<
-
-.c.o:
-	$(CC) $(CXXFLAGS) -c $<
+	rm -r $(BUILD_DIR)/*
+	rm -r $(BIN_DIR)/*
