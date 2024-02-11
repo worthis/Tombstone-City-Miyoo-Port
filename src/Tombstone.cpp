@@ -131,10 +131,10 @@ void Sprite::Hide()
 // -------------------------------
 // GAME
 // -------------------------------
-int Game::TimerEvent()
+void Game::TimerEvent()
 {
-    if (_end_flag == 1)
-        return _end_flag; // Do nothing
+    if (_end_flag)
+        return; // Do nothing
 
     TimeMoveBuissons();
     TimeMoveMonsters();
@@ -145,12 +145,10 @@ int Game::TimerEvent()
     TimeCreateMonsters();
     TimeCreateBuissons();
 
-    if (_end_flag == 1)
+    if (_end_flag)
     {
         ShowMessage(0); // "Press Start to begin"
     }
-
-    return _end_flag;
 }
 
 void Game::CreateTiles(void)
@@ -200,7 +198,7 @@ Game::Game()
     _score = 0; /* POPULATION */
     _day = 1;
     _life = 10; /* SHOONERS */
-    _end_flag = 0;
+    _end_flag = false;
 
     CreateTiles(); // load bitmaps for all tiles
     InitGame();
@@ -210,6 +208,17 @@ Game::~Game()
 {
     EndGame();
     DeleteTiles();
+}
+
+void Game::Restart()
+{
+    EndGame();
+    InitGame();
+
+    _score = 0; /* POPULATION */
+    _day = 1;
+    _life = 10; /* SHOONERS */
+    _end_flag = false;
 }
 
 void Game::StartSoundChannel(int ch, bool forever)
@@ -383,19 +392,19 @@ void Game::InitGame(void)
     CreatePlayer();
 
     // Sound loading
-    sound_table[SOUND_THEME] = Mix_LoadWAV("assets/wav/theme.wav");
-    sound_table[SOUND_FIRE] = Mix_LoadWAV("assets/wav/fire.wav");
-    sound_table[SOUND_KILLED] = Mix_LoadWAV("assets/wav/dead.wav");
-    sound_table[SOUND_MONSTER] = Mix_LoadWAV("assets/wav/monster.wav");
+    sound_table[SOUND_THEME] = Mix_LoadWAV("assets/sfx/theme.wav");
+    sound_table[SOUND_FIRE] = Mix_LoadWAV("assets/sfx/fire.wav");
+    sound_table[SOUND_KILLED] = Mix_LoadWAV("assets/sfx/dead.wav");
+    sound_table[SOUND_MONSTER] = Mix_LoadWAV("assets/sfx/monster.wav");
 
-    for (int i = 0; i < SOUND_MAX; i++)
+    /*for (int i = 0; i < SOUND_MAX; i++)
     {
         if (sound_table[i])
         {
             Mix_Volume(i, 64);                   // Channel volume
             Mix_VolumeChunk(sound_table[i], 64); // Chunk volume
         }
-    }
+    }*/
 }
 
 void Game::FreePlayer(void)
@@ -441,11 +450,11 @@ void Game::EndGame(void)
     FreeFire();
 
     // Sound freeing
-    Mix_HaltChannel(-1); // Stop all sounds
+    StopSoundChannel(-1); // Stop all sounds
     for (int i = 0; i < SOUND_MAX; i++)
     {
-        if (sound_table[i])
-            Mix_FreeChunk(sound_table[i]);
+        // if (sound_table[i])
+        Mix_FreeChunk(sound_table[i]);
     }
 }
 
@@ -460,7 +469,7 @@ void Game::ChangeLife(void)
         player_sprite->setTileNumber(PLAYER_1);
         player_sprite->Move();
 
-        _end_flag = 1;
+        _end_flag = true;
 
         gfxbitmap *tile = tiles[GAMEOVER];
         if (tile)
@@ -470,6 +479,7 @@ void Game::ChangeLife(void)
                     (GfxGetScreenW() - tile->w) / 2, (GfxGetScreenH() - tile->h) / 2,
                     tile->w, tile->h);
         }
+
         return;
     }
 
@@ -1717,25 +1727,24 @@ int main(int argc, char *argv[])
     srand(td.tv_sec);
 
     // Sound init
-    if (Mix_OpenAudio(11025, AUDIO_U8, SOUND_MAX, 1024) == -1)
+    Mix_Init(MIX_INIT_OGG);
+    if (Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, 1, 512) == -1)
     {
         printf("%s", Mix_GetError());
     }
 
     Mix_AllocateChannels(SOUND_MAX);
 
-    int pause_flag = 1;
+    int pause_flag = true;
 
     Game *theGame = new Game();
 
     theGame->StartSoundChannel(0); // Start Theme music
+    theGame->ShowMessage(1);       // "Press Start to begin"
 
-    theGame->ShowMessage(1); // "Press Start to begin"
-    bool end = false;
-
-    while (!end)
+    while (true)
     {
-        if (theGame->IsItTheEnd() == 0)
+        if (!theGame->IsItTheEnd())
         {
             if (isGfxKeyPressed(GFX_KEY_ENTER))
             { // Pause
@@ -1743,15 +1752,15 @@ int main(int argc, char *argv[])
                     ; // Anti-rebond
                 if (pause_flag)
                 {
-                    pause_flag = 0;
+                    pause_flag = false;
                     theGame->ClearMessage();
                     theGame->StopSoundChannel(-1);
                 }
                 else
                 {
-                    pause_flag = 1;
-                    theGame->ShowMessage(2); // "Press ENTER to resume"
+                    pause_flag = true;
                     theGame->StopSoundChannel(-1);
+                    theGame->ShowMessage(2);       // "Press ENTER to resume"
                     theGame->StartSoundChannel(0); // Start Theme music
                 }
             }
@@ -1760,12 +1769,11 @@ int main(int argc, char *argv[])
         // Can restart at any moment
         if (isGfxKeyPressed(GFX_KEY_BACKSPACE))
         { // Restart
-            theGame->StopSoundChannel(-1);
             while (isGfxKeyPressed(GFX_KEY_BACKSPACE))
                 ; // Anti-rebond
-            delete theGame;
-            theGame = new Game();
-            pause_flag = 1;
+            pause_flag = true;
+            theGame->StopSoundChannel(-1);
+            theGame->Restart();
             theGame->ShowMessage(1);       // "Press ENTER to begin"
             theGame->StartSoundChannel(0); // Start Theme music
         }
@@ -1774,18 +1782,21 @@ int main(int argc, char *argv[])
         {
             theGame->TimerEvent();
         }
-        // else {
-        if (isGfxKeyPressed(GFX_KEY_F1))
-        { // Restart
-            while (isGfxKeyPressed(GFX_KEY_F1))
-                ; // Anti-rebond
-            Help h;
-            h.Process();
+        else
+        {
+            if (isGfxKeyPressed(GFX_KEY_F1))
+            { // Help
+                while (isGfxKeyPressed(GFX_KEY_F1))
+                    ; // Anti-rebond
+                Help h;
+                h.Process();
+            }
         }
-        //}
 
         if (isGfxKeyPressed(GFX_KEY_ESC))
-            end = true; // Quit
+        {
+            break; // Quit
+        }
 
         GfxWaitForVBL();
     }
@@ -1795,8 +1806,8 @@ int main(int argc, char *argv[])
         delete theGame;
     }
 
-    Mix_CloseAudio();
     Mix_Quit();
+    Mix_CloseAudio();
     SDL_Quit();
 
     return 0;

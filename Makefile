@@ -36,7 +36,7 @@ bin/$(TARGET_EXEC): $(OBJS)
 	mkdir -p $(BIN_DIR)/assets/images
 	$(CXX) $(OBJS) -o bin/$(TARGET_EXEC) $(LDFLAGS)
 	cp -r $(ASSETS_DIR)/images/bmp/* $(BIN_DIR)/assets/images
-	cp -r $(ASSETS_DIR)/wav $(BIN_DIR)/assets/
+	cp -r $(ASSETS_DIR)/sfx $(BIN_DIR)/assets/
 
 $(BUILD_DIR)/%.cpp.o: %.cpp
 	mkdir -p $(dir $@)

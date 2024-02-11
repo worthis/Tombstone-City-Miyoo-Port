@@ -171,14 +171,15 @@ class Game
 public:
   Game();
   ~Game();
-  int IsItTheEnd() const { return _end_flag; }
+  void Restart();
+  const bool IsItTheEnd() { return _end_flag; }
   void ShowMessage(UInt8 msgn);
   void ClearMessage();
 
   int GetBoard(int x, int y) const { return _board[y][x]; }
   void SetBoard(int x, int y, int aTile) { _board[y][x] = aTile; }
   void DrawPixmap(int x, int y, int aTile);
-  int TimerEvent(void);
+  void TimerEvent(void);
 
   // Sound
   void StartSoundChannel(int ch, bool forever = false);

@@ -187,13 +187,14 @@ void Help::Process()
   {
 
     if (isGfxKeyPressed(GFX_KEY_UP))
-    { // UP
+    { /* UP */
       if (_index > 0)
       {
         _index--;
         redraw = true;
       }
     }
+
     if (isGfxKeyPressed(GFX_KEY_DOWN))
     { /* DOWN */
       if (_index < (_lines - 22))
@@ -204,8 +205,15 @@ void Help::Process()
     }
 
     if (isGfxKeyPressed(GFX_KEY_F1))
-    {
+    { /* QUIT HELP */
       while (isGfxKeyPressed(GFX_KEY_F1))
+        ; // Anti-rebond
+      return;
+    }
+
+    if (isGfxKeyPressed(GFX_KEY_ENTER))
+    { /* QUIT HELP */
+      while (isGfxKeyPressed(GFX_KEY_ENTER))
         ; // Anti-rebond
       return;
     }
@@ -230,6 +238,7 @@ void Help::Process()
         }
       }
     }
+
     GfxWaitForVBL();
   }
 }
