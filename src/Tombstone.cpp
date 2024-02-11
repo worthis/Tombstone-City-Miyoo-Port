@@ -1579,22 +1579,33 @@ void Game::ShowScore(void) const
 {
     char buffer[20];
     UInt32 bg = GfxColor(231, 207, 132);
-    GfxFillRectangle(0, 0, 184, 256, 8, bg);
+    UInt32 black = GfxColor(0, 0, 0);
+
+    GfxFillRectangle(0, 0, 170, 256, 22, bg);
 
     /* Day */
+    sprintf(buffer, "%s", "DAY");
+    GfxLocate(22, 1);
+    GfxString(buffer, black, bg);
     sprintf(buffer, "%d", _day);
-    GfxLocate(23, 4);
-    GfxString(buffer, GfxColor(0, 0, 0), GfxColor(231, 207, 132)); // TOCHANGE
+    GfxLocate(23, 1);
+    GfxString(buffer, black, bg);
 
     /* Population (score) */
+    sprintf(buffer, "%s", "POPULATION");
+    GfxLocate(22, GFX_CHAR_W / 2 - 10 / 2);
+    GfxString(buffer, black, bg);
     sprintf(buffer, "%d", _score);
-    GfxLocate(23, 12);
-    GfxString(buffer, GfxColor(0, 0, 0), GfxColor(231, 207, 132)); // TOCHANGE
+    GfxLocate(23, GFX_CHAR_W / 2 - strlen(buffer) / 2);
+    GfxString(buffer, black, bg);
 
     /* Shooners (life) */
+    sprintf(buffer, "%s", "SHOONERS");
+    GfxLocate(22, GFX_CHAR_W - 9);
+    GfxString(buffer, black, bg);
     sprintf(buffer, "%d", _life);
-    GfxLocate(23, 24);
-    GfxString(buffer, GfxColor(0, 0, 0), GfxColor(231, 207, 132)); // TOCHANGE
+    GfxLocate(23, GFX_CHAR_W - strlen(buffer) - 1);
+    GfxString(buffer, black, bg);
 }
 
 void Game::ReplaceCactusByMonster(int x, int y)
