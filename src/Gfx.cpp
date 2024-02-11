@@ -65,9 +65,6 @@ void GfxInit()
 
   SDL_ShowCursor(SDL_DISABLE);
 
-  /* Clean up on exit */
-  atexit(SDL_Quit);
-
   /*
    * Initialize the display in a 640x480 16-bit palettized mode,
    * requesting a software surface
@@ -117,9 +114,6 @@ bool GfxInitWH(UInt16 w, UInt16 h)
     fprintf(stderr, "Couldn't initialize SDL: %s\n", SDL_GetError());
     return false;
   }
-
-  /* Clean up on exit */
-  atexit(SDL_Quit);
 
   screen = SDL_SetVideoMode(w, h, GFX_SCREEN_DEPTH, SDL_SWSURFACE);
   if (!screen)

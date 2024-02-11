@@ -23,6 +23,7 @@
 #include <list>
 
 #include "Gfx.h"
+#include "Help.h"
 
 using namespace std;
 

@@ -22,9 +22,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h> // gettimeofday
+#include <signal.h>
 
 #include "Tombstone.h"
-#include "Help.h"
 
 // --------------------------------
 // FPOINT
@@ -335,6 +335,7 @@ void Game::CreatePlayer(void)
 void Game::ChangeDay(void)
 {
     _day++;
+    _score += 1000;
     EndGame();
     InitGame();
 }
@@ -764,7 +765,9 @@ void Game::TimeMovePlayer(void)
             player_direction = 1; /* Up */
             player_sprite->setTileNumber(PLAYER_1);
             player_sprite->Move();
-            _score = 0;
+            _score -= 1000;
+            if (_score < 0)
+                _score = 0;
             ShowScore();
         }
     }
@@ -1585,10 +1588,10 @@ void Game::ShowScore(void) const
 
     /* Day */
     sprintf(buffer, "%s", "DAY");
-    GfxLocate(22, 1);
+    GfxLocate(22, 1 + 3);
     GfxString(buffer, black, bg);
     sprintf(buffer, "%d", _day);
-    GfxLocate(23, 1);
+    GfxLocate(23, 1 + 3 + 1 - strlen(buffer) / 2);
     GfxString(buffer, black, bg);
 
     /* Population (score) */
@@ -1604,7 +1607,7 @@ void Game::ShowScore(void) const
     GfxLocate(22, GFX_CHAR_W - 9);
     GfxString(buffer, black, bg);
     sprintf(buffer, "%d", _life);
-    GfxLocate(23, GFX_CHAR_W - strlen(buffer) - 1);
+    GfxLocate(23, GFX_CHAR_W - 4 - strlen(buffer) / 2 - 1);
     GfxString(buffer, black, bg);
 }
 
@@ -1727,8 +1730,26 @@ int sign(int val)
 // --------------------------
 // MAIN
 // --------------------------
+static bool quit = false;
+
+static void sigHandler(int sig)
+{
+    switch (sig)
+    {
+    case SIGINT:
+    case SIGTERM:
+        quit = true;
+        break;
+    default:
+        break;
+    }
+}
+
 int main(int argc, char *argv[])
 {
+    signal(SIGINT, sigHandler);
+    signal(SIGTERM, sigHandler);
+
     // Graphical init
     GfxInit();
 
@@ -1753,7 +1774,7 @@ int main(int argc, char *argv[])
     theGame->StartSoundChannel(0); // Start Theme music
     theGame->ShowMessage(1);       // "Press Start to begin"
 
-    while (true)
+    while (!quit)
     {
         if (!theGame->IsItTheEnd())
         {
@@ -1783,7 +1804,6 @@ int main(int argc, char *argv[])
             while (isGfxKeyPressed(GFX_KEY_BACKSPACE))
                 ; // Anti-rebond
             pause_flag = true;
-            theGame->StopSoundChannel(-1);
             theGame->Restart();
             theGame->ShowMessage(1);       // "Press ENTER to begin"
             theGame->StartSoundChannel(0); // Start Theme music
@@ -1804,12 +1824,14 @@ int main(int argc, char *argv[])
             }
         }
 
-        if (isGfxKeyPressed(GFX_KEY_ESC))
-        {
-            break; // Quit
-        }
-
         GfxWaitForVBL();
+
+        if (isGfxKeyPressed(GFX_KEY_ESC))
+        { // Quit
+            while (isGfxKeyPressed(GFX_KEY_ESC))
+                ; // Anti-rebond
+            quit = true;
+        }
     }
 
     if (theGame)
@@ -1828,7 +1850,9 @@ void Game::ShowMessage(UInt8 msgn)
 {
     UInt32 bg = GfxColor(231, 207, 132);
     UInt32 fg = GfxColor(100, 100, 100);
+
     ClearMessage();
+
     switch (msgn)
     {
     case 1:
