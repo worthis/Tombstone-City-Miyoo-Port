@@ -311,7 +311,7 @@ void GfxChar(UInt8 ch, UInt32 fgColor, UInt32 bgColor)
 
       if (data)
         putpixel(screen, x + i, y + iline, fgColor); // ink color (foreground)
-      else
+      else if (bgColor)
         putpixel(screen, x + i, y + iline, bgColor); // paper color (background)
     }
   }

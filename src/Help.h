@@ -21,15 +21,18 @@
 #include "Platform.h"
 #include "Gfx.h"
 
-class Help {
- public:
-  Help ();
-  ~Help ();
-  void Process ();
- private:
+class Help
+{
+public:
+  Help();
+  ~Help();
+  const bool Process();
+
+private:
   u8 _index;
   u8 _lines;
   gfxbitmap *_saved_area;
+  gfxbitmap *_help_bg;
 };
 
 #endif

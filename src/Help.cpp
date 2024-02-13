@@ -154,6 +154,7 @@ Help::Help() : _index(0), _lines(0)
           0, 0, // X, Y (SRC)
           0, 0, // X, Y (DST)
           _saved_area->w, _saved_area->h);
+  _help_bg = GfxCreateBitmapFromFile("assets/images/lower_screen");
 }
 
 Help::~Help()
@@ -164,28 +165,22 @@ Help::~Help()
           _saved_area->w, _saved_area->h);
 
   GfxDeleteBitmap(_saved_area);
+  GfxDeleteBitmap(_help_bg);
+
+  _saved_area = 0;
+  _help_bg = 0;
 }
 
-void Help::Process()
+const bool Help::Process()
 {
   UInt32 pa = GfxColor(0, 0, 255);
-  UInt32 bg = GfxColor(255, 255, 255);
+  UInt32 bg = 0; // GfxColor(255, 255, 255);
   UInt32 fg = GfxColor(0, 0, 0);
 
   bool redraw = true;
-  GfxClear(0, bg);
-  GfxLocate(0, 0);
-#ifdef MIYOO_MINI
-  GfxString("Press L-Trigger to quit help", GfxColor(100, 100, 100), bg);
-#else
-  GfxString("Press ESC to quit help", GfxColor(100, 100, 100), bg);
-#endif
-  GfxLocate(1, 0);
-  GfxString("Use arrows to navigate", GfxColor(100, 100, 100), bg);
 
-  while (1)
+  while (true)
   {
-
     if (isGfxKeyPressed(GFX_KEY_UP))
     { /* UP */
       if (_index > 0)
@@ -208,20 +203,42 @@ void Help::Process()
     { /* QUIT HELP */
       while (isGfxKeyPressed(GFX_KEY_F1))
         ; // Anti-rebond
-      return;
+      return false;
     }
 
     if (isGfxKeyPressed(GFX_KEY_ENTER))
     { /* QUIT HELP */
       while (isGfxKeyPressed(GFX_KEY_ENTER))
         ; // Anti-rebond
-      return;
+      return false;
+    }
+
+    if (isGfxKeyPressed(GFX_KEY_ESC))
+    { /* QUIT GAME */
+      while (isGfxKeyPressed(GFX_KEY_ESC))
+        ; // Anti-rebond
+      return true;
     }
 
     if (redraw)
     {
       int i;
       redraw = false;
+
+      // GfxClear(0, bg);
+      GfxBlit(_help_bg, 0,
+              0, 0,
+              0, 0,
+              _help_bg->w, _help_bg->h);
+
+      GfxLocate(0, 0);
+#ifdef MIYOO_MINI
+      GfxString("Press L-Trigger to quit help", GfxColor(100, 100, 100), bg);
+#else
+      GfxString("Press ESC to quit help", GfxColor(100, 100, 100), bg);
+#endif
+      GfxLocate(1, 0);
+      GfxString("Use arrows to navigate", GfxColor(100, 100, 100), bg);
 
       for (i = 0; i < 22; i++)
       {
@@ -241,4 +258,6 @@ void Help::Process()
 
     GfxWaitForVBL();
   }
+
+  return false;
 }

@@ -1588,10 +1588,10 @@ void Game::ShowScore(void) const
 
     /* Day */
     sprintf(buffer, "%s", "DAY");
-    GfxLocate(22, 1 + 3);
+    GfxLocate(22, 1 + 2);
     GfxString(buffer, black, bg);
     sprintf(buffer, "%d", _day);
-    GfxLocate(23, 1 + 3 + 1 - strlen(buffer) / 2);
+    GfxLocate(23, 1 + 2 + 1 - strlen(buffer) / 2);
     GfxString(buffer, black, bg);
 
     /* Population (score) */
@@ -1820,7 +1820,8 @@ int main(int argc, char *argv[])
                 while (isGfxKeyPressed(GFX_KEY_F1))
                     ; // Anti-rebond
                 Help h;
-                h.Process();
+                if (h.Process())
+                    quit = true;
             }
         }
 
