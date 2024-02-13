@@ -133,9 +133,6 @@ void Sprite::Hide()
 // -------------------------------
 void Game::TimerEvent()
 {
-    if (_end_flag)
-        return; // Do nothing
-
     TimeMoveBuissons();
     TimeMoveMonsters();
     TimeMovePlayer();
@@ -144,11 +141,6 @@ void Game::TimerEvent()
     TimeShoot();
     TimeCreateMonsters();
     TimeCreateBuissons();
-
-    if (_end_flag)
-    {
-        ShowMessage(0); // "Press Start to begin"
-    }
 }
 
 void Game::CreateTiles(void)
@@ -477,7 +469,7 @@ void Game::ChangeLife(void)
         {
             GfxBlit(tile, 0,
                     0, 0,
-                    (GfxGetScreenW() - tile->w) / 2, (GfxGetScreenH() - tile->h) / 2,
+                    (GfxGetScreenW() - tile->w) / 2, 0,
                     tile->w, tile->h);
         }
 
@@ -1811,7 +1803,8 @@ int main(int argc, char *argv[])
 
         if (!pause_flag)
         {
-            theGame->TimerEvent();
+            if (!theGame->IsItTheEnd())
+                theGame->TimerEvent();
         }
         else
         {
